@@ -1,22 +1,47 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Mapa Offline</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="manifest" href="manifest.json">
-  <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("service-worker.js");
-    }
-  </script>
+  <meta charset="utf-8" />
+  <title>Mapa com KML Offline</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    body { margin:0; padding:0; }
+    #map { height: 100vh; width: 100%; }
+    #file-input { position:absolute; top:10px; left:10px; z-index:1000; background:#fff; padding:5px; border-radius:6px; }
+  </style>
 </head>
 <body>
-  <h1>Mapa com KML Offline</h1>
+  <input type="file" id="file-input" accept=".kml,.kmz" />
   <div id="map"></div>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet-kml/dist/leaflet-kml.js"></script>
-  <script src="script.js"></script>
+  <script src="https://unpkg.com/leaflet-kmz/dist/leaflet-kmz.js"></script>
+  <script>
+    // inicializa o mapa (ajusta as coordenadas se precisar centralizar em outro ponto)
+    const map = L.map('map').setView([-21.8, -48.2], 10);
+
+    // camada base do openstreetmap
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    // upload de KML/KMZ
+    document.getElementById('file-input').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const kmz = new L.KMZParser({ map: map });
+        kmz.load(event.target.result);
+        map.addLayer(kmz);
+        kmz.on('loaded', function(e) {
+          map.fitBounds(e.layer.getBounds());
+        });
+      };
+      reader.readAsDataURL(file);
+    });
+  </script>
 </body>
 </html>
