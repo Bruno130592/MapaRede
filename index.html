@@ -1,24 +1,30 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
   <meta charset="utf-8" />
-  <title>Mapa com KML Offline</title>
+  <title>Mapa com KML Automático</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
-    body { margin:0; padding:0; }
-    #map { height: 100vh; width: 100%; }
-    #file-input { position:absolute; top:10px; left:10px; z-index:1000; background:#fff; padding:5px; border-radius:6px; }
+    body {
+      margin: 0;
+      padding: 0;
+    }
+    #map {
+      height: 100vh;
+      width: 100%;
+    }
   </style>
 </head>
 <body>
-  <input type="file" id="file-input" accept=".kml,.kmz" />
   <div id="map"></div>
 
+  <!-- scripts leaflet -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-kmz/dist/leaflet-kmz.js"></script>
+
   <script>
-    // inicializa o mapa (ajusta as coordenadas se precisar centralizar em outro ponto)
-    const map = L.map('map').setView([-21.8, -48.2], 10);
+    // inicia o mapa
+    const map = L.map('map').setView([-21.8, -48.2], 12);
 
     // camada base do openstreetmap
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -26,21 +32,14 @@
       attribution: '© OpenStreetMap'
     }).addTo(map);
 
-    // upload de KML/KMZ
-    document.getElementById('file-input').addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (!file) return;
+    // carrega automaticamente o arquivo KML/KMZ do repositório
+    const kmz = new L.KMZParser({ map: map });
+    kmz.load('mapa.kml'); // troque o nome se seu arquivo for diferente
+    map.addLayer(kmz);
 
-      const reader = new FileReader();
-      reader.onload = function(event) {
-        const kmz = new L.KMZParser({ map: map });
-        kmz.load(event.target.result);
-        map.addLayer(kmz);
-        kmz.on('loaded', function(e) {
-          map.fitBounds(e.layer.getBounds());
-        });
-      };
-      reader.readAsDataURL(file);
+    // ajusta zoom para o conteúdo do KML
+    kmz.on('loaded', function(e) {
+      map.fitBounds(e.layer.getBounds());
     });
   </script>
 </body>
