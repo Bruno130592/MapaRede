@@ -2,10 +2,10 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>mapa com kmz</title>
+  <title>mapa com kml</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet-kmz/dist/leaflet-kmz.js"></script>
+  <script src="https://api.mapbox.com/mapbox/leaflet/omnivore/v0.3.4/leaflet-omnivore.min.js"></script>
   <style>
     body { margin:0; padding:0; }
     #map { height: 90vh; }
@@ -24,7 +24,7 @@
 </head>
 <body>
   <div id="controls">
-    <button onclick="carregarKMZ()">carregar kmz</button>
+    <button onclick="carregarKML()">carregar kml</button>
   </div>
   <div id="map"></div>
 
@@ -35,19 +35,13 @@
       maxZoom: 19,
     }).addTo(map);
 
-    var control = L.control.layers(null, null, { collapsed:false }).addTo(map);
+    function carregarKML() {
+      var layer = omnivore.kml('ARARAQUARA.kml').addTo(map);
 
-    function carregarKMZ() {
-      var kmz = L.kmzLayer().addTo(map);
-
-      kmz.on('load', function(e) {
-        control.addOverlay(e.layer, e.name);
-        e.layer.addTo(map);
-        alert("kmz carregado com sucesso!");
+      layer.on('ready', function() {
+        map.fitBounds(layer.getBounds());
+        alert("kml carregado com sucesso!")
       });
-
-      // exemplo: araraquara
-      kmz.load('https://raw.githubusercontent.com/Bruno130592/MapaRede/main/ARARAQUARA.kmz');
     }
   </script>
 </body>
