@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <title>Mapa com KMZ Automáticos</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
   <style>
     body { margin:0; padding:0; }
     #map { height: 100vh; width: 100%; }
@@ -12,46 +13,68 @@
 <body>
   <div id="map"></div>
 
-  <!-- scripts leaflet -->
+  <!-- leaflet -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <!-- plugin kmz -->
   <script src="https://unpkg.com/leaflet-kmz/dist/leaflet-kmz.js"></script>
+  <!-- plugin busca -->
+  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
   <script>
     // inicia o mapa
-    const map = L.map('map').setView([-21.8, -48.2], 10);
+    const map = L.map('map').setView([-21.8, -48.2], 11);
 
-    // camada base do openstreetmap
+    // camada base
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '© OpenStreetMap'
     }).addTo(map);
 
-    // objeto para as camadas
+    // objeto para sobreposições
     const overlays = {};
+    const controleCamadas = L.control.layers(null, overlays).addTo(map);
 
-    // lista de arquivos kmz do seu repositório
-    const arquivos = [
-      "ARARAQUARA.kmz",
-      "BOA ESPERANÇA DO SUL.kmz",
-      "DOURADO.kmz",
-      "GAVIÃO PEIXOTO.kmz",
-      "IBITINGA.kmz",
-      "ITAPOLIS.kmz",
-      "MATAO.kmz",
-      "RINCAO.kmz",
-      "TAQUARITINGA.kmz",
-      "UIRAPURU.kmz"
-    ];
+    // lista de kmz com links brutos
+    const arquivos = {
+      "Araraquara": "https://raw.githubusercontent.com/Bruno130592/MapaRede/main/ARARAQUARA.kmz",
+      "Boa Esperança do Sul": "https://raw.githubusercontent.com/Bruno130592/MapaRede/main/BOA%20ESPERANÇA%20DO%20SUL.kmz",
+      "Dourado": "https://raw.githubusercontent.com/Bruno130592/MapaRede/main/DOURADO.kmz",
+      "Gavião Peixoto": "https://raw.githubusercontent.com/Bruno130592/MapaRede/main/GAVIÃO%20PEIXOTO.kmz",
+      "Ibitinga": "https://raw.githubusercontent.com/Bruno130592/MapaRede/main/IBITINGA.kmz",
+      "Itápolis": "https://raw.githubusercontent.com/Bruno130592/MapaRede/main/ITAPOLIS.kmz",
+      "Matão": "https://raw.githubusercontent.com/Bruno130592/MapaRede/main/MATAO.kmz",
+      "Rincão": "https://raw.githubusercontent.com/Bruno130592/MapaRede/main/RINCAO.kmz",
+      "Taquaritinga": "https://raw.githubusercontent.com/Bruno130592/MapaRede/main/TAQUARITINGA.kmz",
+      "Uirapuru": "https://raw.githubusercontent.com/Bruno130592/MapaRede/main/UIRAPURU.kmz"
+    };
 
-    // carregar todos os arquivos kmz
-    arquivos.forEach(nome => {
-      const kmzLayer = new L.KMZParser({ map: map });
-      kmzLayer.load(nome); // carrega direto do repositório
+    // carrega kmz
+    for (const [nome, url] of Object.entries(arquivos)) {
+      const kmzLayer = new L.KMZParser();
+      kmzLayer.load(url);
+
       kmzLayer.on('loaded', function(e) {
+        // adiciona a camada no controle
         overlays[nome] = e.layer;
-        L.control.layers(null, overlays).addTo(map);
+        controleCamadas.addOverlay(e.layer, nome);
+
+        // quando ativar a camada, faz zoom nela
+        e.layer.on('add', function() {
+          try {
+            map.fitBounds(e.layer.getBounds());
+          } catch(err) {
+            console.log("não consegui aplicar zoom em " + nome, err);
+          }
+        });
       });
-    });
+    }
+
+    // adiciona busca (endereços, ruas, números etc)
+    L.Control.geocoder({
+      defaultMarkGeocode: true,
+      placeholder: "Buscar endereço ou número"
+    }).addTo(map);
+
   </script>
 </body>
 </html>
