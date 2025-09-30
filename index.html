@@ -1,80 +1,54 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html>
 <head>
   <meta charset="utf-8" />
-  <title>Mapa com KMZ Automáticos</title>
+  <title>mapa com kmz</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-kmz/dist/leaflet-kmz.js"></script>
   <style>
     body { margin:0; padding:0; }
-    #map { height: 100vh; width: 100%; }
+    #map { height: 90vh; }
+    #controls { padding:10px; text-align:center; background:#f0f0f0; }
+    button {
+      padding:8px 16px;
+      border:none;
+      border-radius:6px;
+      background:#0078d7;
+      color:#fff;
+      font-weight:bold;
+      cursor:pointer;
+    }
+    button:hover { background:#005a9e; }
   </style>
 </head>
 <body>
+  <div id="controls">
+    <button onclick="carregarKMZ()">carregar kmz</button>
+  </div>
   <div id="map"></div>
 
-  <!-- leaflet -->
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <!-- plugin kmz -->
-  <script src="https://unpkg.com/leaflet-kmz/dist/leaflet-kmz.js"></script>
-  <!-- plugin busca -->
-  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
-
   <script>
-    // inicia o mapa
-    const map = L.map('map').setView([-21.8, -48.2], 11);
+    var map = L.map('map').setView([-21.7944, -48.1756], 12);
 
-    // camada base
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
-      attribution: '© OpenStreetMap'
     }).addTo(map);
 
-    // objeto para sobreposições
-    const overlays = {};
-    const controleCamadas = L.control.layers(null, overlays).addTo(map);
+    var control = L.control.layers(null, null, { collapsed:false }).addTo(map);
 
-    // lista de kmz com links brutos
-    const arquivos = {
-      "Araraquara": "https://raw.githubusercontent.com/Bruno130592/MapaRede/main/ARARAQUARA.kmz",
-      "Boa Esperança do Sul": "https://raw.githubusercontent.com/Bruno130592/MapaRede/main/BOA%20ESPERANÇA%20DO%20SUL.kmz",
-      "Dourado": "https://raw.githubusercontent.com/Bruno130592/MapaRede/main/DOURADO.kmz",
-      "Gavião Peixoto": "https://raw.githubusercontent.com/Bruno130592/MapaRede/main/GAVIÃO%20PEIXOTO.kmz",
-      "Ibitinga": "https://raw.githubusercontent.com/Bruno130592/MapaRede/main/IBITINGA.kmz",
-      "Itápolis": "https://raw.githubusercontent.com/Bruno130592/MapaRede/main/ITAPOLIS.kmz",
-      "Matão": "https://raw.githubusercontent.com/Bruno130592/MapaRede/main/MATAO.kmz",
-      "Rincão": "https://raw.githubusercontent.com/Bruno130592/MapaRede/main/RINCAO.kmz",
-      "Taquaritinga": "https://raw.githubusercontent.com/Bruno130592/MapaRede/main/TAQUARITINGA.kmz",
-      "Uirapuru": "https://raw.githubusercontent.com/Bruno130592/MapaRede/main/UIRAPURU.kmz"
-    };
+    function carregarKMZ() {
+      var kmz = L.kmzLayer().addTo(map);
 
-    // carrega kmz
-    for (const [nome, url] of Object.entries(arquivos)) {
-      const kmzLayer = new L.KMZParser();
-      kmzLayer.load(url);
-
-      kmzLayer.on('loaded', function(e) {
-        // adiciona a camada no controle
-        overlays[nome] = e.layer;
-        controleCamadas.addOverlay(e.layer, nome);
-
-        // quando ativar a camada, faz zoom nela
-        e.layer.on('add', function() {
-          try {
-            map.fitBounds(e.layer.getBounds());
-          } catch(err) {
-            console.log("não consegui aplicar zoom em " + nome, err);
-          }
-        });
+      kmz.on('load', function(e) {
+        control.addOverlay(e.layer, e.name);
+        e.layer.addTo(map);
+        alert("kmz carregado com sucesso!");
       });
+
+      // exemplo: araraquara
+      kmz.load('https://raw.githubusercontent.com/Bruno130592/MapaRede/main/ARARAQUARA.kmz');
     }
-
-    // adiciona busca (endereços, ruas, números etc)
-    L.Control.geocoder({
-      defaultMarkGeocode: true,
-      placeholder: "Buscar endereço ou número"
-    }).addTo(map);
-
   </script>
 </body>
 </html>
