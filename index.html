@@ -2,17 +2,11 @@
 <html lang="pt-br">
 <head>
   <meta charset="utf-8" />
-  <title>Mapa com KML Automático</title>
+  <title>Mapa com KMZ Automáticos</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
-    body {
-      margin: 0;
-      padding: 0;
-    }
-    #map {
-      height: 100vh;
-      width: 100%;
-    }
+    body { margin:0; padding:0; }
+    #map { height: 100vh; width: 100%; }
   </style>
 </head>
 <body>
@@ -24,7 +18,7 @@
 
   <script>
     // inicia o mapa
-    const map = L.map('map').setView([-21.8, -48.2], 12);
+    const map = L.map('map').setView([-21.8, -48.2], 10);
 
     // camada base do openstreetmap
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -32,14 +26,31 @@
       attribution: '© OpenStreetMap'
     }).addTo(map);
 
-    // carrega automaticamente o arquivo KML/KMZ do repositório
-    const kmz = new L.KMZParser({ map: map });
-    kmz.load('mapa.kml'); // troque o nome se seu arquivo for diferente
-    map.addLayer(kmz);
+    // objeto para as camadas
+    const overlays = {};
 
-    // ajusta zoom para o conteúdo do KML
-    kmz.on('loaded', function(e) {
-      map.fitBounds(e.layer.getBounds());
+    // lista de arquivos kmz do seu repositório
+    const arquivos = [
+      "ARARAQUARA.kmz",
+      "BOA ESPERANÇA DO SUL.kmz",
+      "DOURADO.kmz",
+      "GAVIÃO PEIXOTO.kmz",
+      "IBITINGA.kmz",
+      "ITAPOLIS.kmz",
+      "MATAO.kmz",
+      "RINCAO.kmz",
+      "TAQUARITINGA.kmz",
+      "UIRAPURU.kmz"
+    ];
+
+    // carregar todos os arquivos kmz
+    arquivos.forEach(nome => {
+      const kmzLayer = new L.KMZParser({ map: map });
+      kmzLayer.load(nome); // carrega direto do repositório
+      kmzLayer.on('loaded', function(e) {
+        overlays[nome] = e.layer;
+        L.control.layers(null, overlays).addTo(map);
+      });
     });
   </script>
 </body>
